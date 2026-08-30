@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Welcome to your Lovable project
 
 This project was built with [Lovable](https://lovable.dev).
@@ -27,3 +28,6 @@ npm run dev
 - TypeScript
 - React
 - Tailwind CSS
+=======
+# classear-ai
+>>>>>>> b840d71aef02929f3c94935eeea0c9ba415ab35f
