@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export const MAX_RECORDING_SECONDS = 30 * 60;
+export const MAX_RECORDING_SECONDS = 50 * 60;
 
 export type RecorderState = "idle" | "requesting" | "recording" | "paused" | "stopped" | "denied";
 
@@ -29,6 +29,58 @@ export function useRecorder() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const secondsRef = useRef(0);
+  const segmentStartRef = useRef<number | null>(null);
+  const accumulatedRef = useRef(0);
+  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null);
+
+  const releaseWakeLock = useCallback(() => {
+    const lock = wakeLockRef.current;
+    wakeLockRef.current = null;
+    void lock?.release().catch(() => {});
+  }, []);
+
+  const requestWakeLock = useCallback(async () => {
+    const nav = navigator as Navigator & {
+      wakeLock?: { request: (type: "screen") => Promise<{ release: () => Promise<void> }> };
+    };
+    if (!nav.wakeLock || wakeLockRef.current) return;
+    try {
+      wakeLockRef.current = await nav.wakeLock.request("screen");
+    } catch {
+      wakeLockRef.current = null;
+    }
+  }, []);
+
+  const keepAliveRef = useRef<HTMLAudioElement | null>(null);
+
+  // A silent looping audio element keeps the tab in an "audible" state so the
+  // browser does not throttle or suspend capture when the screen turns off.
+  const startKeepAlive = useCallback(() => {
+    if (keepAliveRef.current || typeof Audio === "undefined") return;
+    try {
+      const el = new Audio(
+        "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=",
+      );
+      el.loop = true;
+      el.volume = 0.0001;
+      void el.play().catch(() => {});
+      keepAliveRef.current = el;
+    } catch {
+      keepAliveRef.current = null;
+    }
+  }, []);
+
+  const stopKeepAlive = useCallback(() => {
+    const el = keepAliveRef.current;
+    keepAliveRef.current = null;
+    if (!el) return;
+    try {
+      el.pause();
+      el.src = "";
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const cleanup = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -38,14 +90,45 @@ export function useRecorder() {
     setAnalyser(null);
     void audioCtxRef.current?.close().catch(() => {});
     audioCtxRef.current = null;
-  }, []);
+    releaseWakeLock();
+    stopKeepAlive();
+  }, [releaseWakeLock, stopKeepAlive]);
 
   useEffect(() => cleanup, [cleanup]);
 
+  // Keep capture alive when the phone screen turns off or the tab is backgrounded.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      if (recorderRef.current?.state === "recording") {
+        void requestWakeLock();
+        startKeepAlive();
+        void audioCtxRef.current?.resume().catch(() => {});
+        void keepAliveRef.current?.play().catch(() => {});
+      }
+    };
+    const onUnload = (event: BeforeUnloadEvent) => {
+      if (recorderRef.current?.state !== "recording") return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("beforeunload", onUnload);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("beforeunload", onUnload);
+    };
+  }, [requestWakeLock, startKeepAlive]);
+
+
+
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
+    segmentStartRef.current = Date.now();
     timerRef.current = setInterval(() => {
-      secondsRef.current += 1;
+      const started = segmentStartRef.current ?? Date.now();
+      secondsRef.current =
+        accumulatedRef.current + Math.floor((Date.now() - started) / 1000);
       setSeconds(secondsRef.current);
       if (secondsRef.current >= MAX_RECORDING_SECONDS) {
         recorderRef.current?.state !== "inactive" && recorderRef.current?.stop();
@@ -81,12 +164,14 @@ export function useRecorder() {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
       recorder.onstop = () => setState("stopped");
-      recorder.start(5000);
+      recorder.start(1000);
       recorderRef.current = recorder;
 
       secondsRef.current = 0;
+      accumulatedRef.current = 0;
       setSeconds(0);
       startTimer();
+      void requestWakeLock();
       setState("recording");
     } catch (err) {
       cleanup();
@@ -110,16 +195,20 @@ export function useRecorder() {
     recorder.pause();
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
+    accumulatedRef.current = secondsRef.current;
+    segmentStartRef.current = null;
+    releaseWakeLock();
     setState("paused");
-  }, []);
+  }, [releaseWakeLock]);
 
   const resume = useCallback(() => {
     const recorder = recorderRef.current;
     if (!recorder || recorder.state !== "paused") return;
     recorder.resume();
     startTimer();
+    void requestWakeLock();
     setState("recording");
-  }, [startTimer]);
+  }, [startTimer, requestWakeLock]);
 
   const stop = useCallback(async (): Promise<RecorderResult | null> => {
     const recorder = recorderRef.current;

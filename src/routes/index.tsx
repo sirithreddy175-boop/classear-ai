@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
+import { WaveBackground } from "@/components/landing/WaveBackground";
 import { Waveform } from "@/components/landing/Waveform";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { GlassButton } from "@/components/ui/glass-button";
@@ -45,7 +46,7 @@ const STEPS = [
   {
     n: "01",
     kicker: "Listens",
-    title: "Listens for 30 minutes",
+    title: "Listens for 50 minutes",
     body: "One tap capture, live waveform, pause any time.",
   },
   {
@@ -76,9 +77,16 @@ function Landing() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMenuOpen(false);
     };
+    const mql = window.matchMedia("(min-width: 768px)");
+    const onDesktop = () => {
+      if (mql.matches) setMenuOpen(false);
+    };
+    onDesktop();
+    mql.addEventListener("change", onDesktop);
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
+      mql.removeEventListener("change", onDesktop);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
@@ -105,7 +113,7 @@ function Landing() {
           </nav>
           <div className="reveal-1 hidden md:block" style={{ animationDelay: "420ms" }}>
             <GlassButton asChild variant="secondary" size="sm">
-              <Link to="/dashboard">Open app</Link>
+              <Link to="/app">Open App</Link>
             </GlassButton>
           </div>
           <button
@@ -156,16 +164,17 @@ function Landing() {
             ))}
           </nav>
           <GlassButton asChild block className="reveal-1 mt-6" style={{ animationDelay: "400ms" }}>
-            <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
-              Open app
+            <Link to="/app" onClick={() => setMenuOpen(false)}>
+              Open App
             </Link>
           </GlassButton>
         </div>
       )}
 
       <main>
-        <section className="relative flex min-h-[calc(100svh-88px)] flex-col justify-center overflow-hidden px-5 pb-16 pt-14 sm:px-9 lg:min-h-[calc(100svh-7rem)] lg:justify-end lg:pb-20">
-          <div className="mx-auto w-full max-w-3xl text-center">
+        <section className="relative flex min-h-[calc(100svh-88px)] flex-col justify-center overflow-hidden px-5 pb-24 pt-16 sm:px-9 lg:min-h-[calc(100svh-7rem)] lg:pb-32">
+          <WaveBackground />
+          <div className="relative mx-auto w-full max-w-3xl text-center">
             <span
               className="reveal-1 inline-flex items-center gap-2 rounded-[6px] border border-border px-3 py-1.5 text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground"
               style={{
@@ -189,41 +198,32 @@ function Landing() {
               className="reveal-1 mx-auto mt-7 max-w-[350px] text-[14px] leading-[1.6] text-muted-foreground sm:max-w-[600px] sm:text-[15px]"
               style={{ animationDelay: "360ms" }}
             >
-              Press record at the start of the lecture. Classear listens, then hands back the
-              summary, key points, the concepts your teacher actually explained, and the questions
-              likely to show up in the exam.
+              Listen to your lectures and turn them into clear notes, key concepts, questions, and
+              learning resources.
             </p>
             <div
               className="reveal-1 mx-auto mt-10 flex w-full max-w-[340px] flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:justify-center"
               style={{ animationDelay: "460ms" }}
             >
               <GlassButton asChild className="h-12 px-7">
-                <Link to="/classes/new">Start listening</Link>
+                <Link to="/app">Open App</Link>
               </GlassButton>
               <GlassButton asChild variant="secondary" className="h-12 px-7">
-                <Link to="/dashboard">See a demo class</Link>
+                <a href="#how">See How It Works</a>
               </GlassButton>
             </div>
-          </div>
-
-          <div
-            className="reveal-1 relative mx-auto mt-16 w-full max-w-2xl"
-            style={{ animationDelay: "600ms" }}
-          >
             <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 -inset-y-10"
-              style={{
-                background:
-                  "radial-gradient(ellipse at center, rgba(255,255,255,0.055), transparent 70%)",
-              }}
-            />
-            <Waveform className="h-16 sm:h-20" bars={50} />
-            <p className="mt-5 text-center text-[12px] uppercase tracking-[0.18em] text-muted-foreground sm:text-[13px]">
-              Ready to listen
-            </p>
+              className="reveal-1 mx-auto mt-12 w-full max-w-[520px]"
+              style={{ animationDelay: "560ms" }}
+            >
+              <Waveform bars={64} className="h-10 opacity-90" />
+              <p className="mt-4 text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+                Ready to listen
+              </p>
+            </div>
           </div>
         </section>
+
 
         <section id="features" className="border-t border-border-soft px-5 py-16 sm:px-9 sm:py-24">
           <div className="mx-auto max-w-4xl">
@@ -317,7 +317,7 @@ function Landing() {
                 ],
                 [
                   "How long can one class be?",
-                  "Up to 30 minutes per recording. Longer lectures can be captured as two classes.",
+                  "Up to 50 minutes per recording. Longer lectures can be captured as two classes.",
                 ],
                 [
                   "Does it record without me knowing?",

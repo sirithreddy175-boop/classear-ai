@@ -5,12 +5,16 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell, SectionCard } from "@/components/app/AppShell";
+import { QuizPanel } from "@/components/app/QuizPanel";
+import { RoadmapPanel } from "@/components/app/RoadmapPanel";
 import { GlassButton } from "@/components/ui/glass-button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { deleteClass, getClass, getMaterial, listConversation } from "@/lib/classes-data";
 import { askClass } from "@/lib/classes.functions";
+import { resourceLinks } from "@/lib/resource-links";
 import { CLASS_STATUS_LABEL, formatDuration } from "@/lib/study-types";
+
 
 export const Route = createFileRoute("/_authenticated/classes/$id/")({
   head: () => ({
@@ -220,7 +224,7 @@ function ClassDetailPage() {
                 {(m?.resources ?? []).length === 0 ? (
                   <p className="text-[13px] text-muted-foreground">No suggestions yet.</p>
                 ) : (
-                  <ul className="space-y-4">
+                  <ul className="space-y-5">
                     {(m?.resources ?? []).map((resource, index) => (
                       <li key={index}>
                         <p className="text-[14px] text-foreground">
@@ -230,6 +234,19 @@ function ClassDetailPage() {
                         <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
                           {resource.why}
                         </p>
+                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                          {resourceLinks(resource.title, data.subject).map((link) => (
+                            <a
+                              key={link.label}
+                              href={link.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[12px] text-foreground underline underline-offset-4"
+                            >
+                              {link.label}
+                            </a>
+                          ))}
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -237,6 +254,10 @@ function ClassDetailPage() {
               </SectionCard>
             </>
           )}
+
+          <RoadmapPanel classId={id} />
+          <QuizPanel classId={id} />
+
 
           <SectionCard title="Ask this class">
             <div className="space-y-4">

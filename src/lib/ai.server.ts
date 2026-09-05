@@ -1,5 +1,5 @@
 import { DEMO_MATERIAL, DEMO_TRANSCRIPT } from "./demo-lecture";
-import type { StudyMaterial } from "./study-types";
+import type { Quiz, QuizQuestion, Roadmap, StudyMaterial } from "./study-types";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-2.5-flash";
@@ -189,4 +189,109 @@ export async function answerFromLecture(
   return hit
     ? `The AI assistant is unavailable right now, but this part of the class looks relevant:\n\n${hit.trim()}`
     : "The AI assistant is unavailable right now, so I can't answer from this class yet. Try again in a moment.";
+}
+
+const QUIZ_SHAPE = `{ "questions": [{ "question": string, "options": [string, string, string, string], "answerIndex": 0 | 1 | 2 | 3, "explanation": string }] }`;
+
+export async function generateQuiz(
+  transcript: string,
+  title: string,
+  topic: string,
+  count: number,
+): Promise<{ quiz: Quiz | null }> {
+  const raw = await chat(
+    [
+      {
+        role: "system",
+        content:
+          `You write multiple-choice quizzes from one class transcript. Ask only about content the transcript actually covers. Every question has exactly four options, one correct answer, and a one-sentence explanation. Reply with JSON only matching: ` +
+          QUIZ_SHAPE,
+      },
+      {
+        role: "user",
+        content: `Class: ${title}\nTopic to quiz on: ${topic || "the whole class"}\nNumber of questions: ${count}\n\nTranscript:\n${transcript.slice(0, 60000)}`,
+      },
+    ],
+    true,
+  );
+
+  const parsed = parseJson<{ questions?: QuizQuestion[] }>(raw);
+  const questions = Array.isArray(parsed?.questions)
+    ? parsed!.questions
+        .filter(
+          (q) =>
+            q &&
+            typeof q.question === "string" &&
+            Array.isArray(q.options) &&
+            q.options.length >= 2,
+        )
+        .map((q) => ({
+          question: q.question,
+          options: q.options.filter((o) => typeof o === "string"),
+          answerIndex:
+            typeof q.answerIndex === "number" && q.answerIndex >= 0 && q.answerIndex < q.options.length
+              ? q.answerIndex
+              : 0,
+          explanation: typeof q.explanation === "string" ? q.explanation : "",
+        }))
+        .slice(0, count)
+    : [];
+
+  if (questions.length === 0) return { quiz: null };
+  return { quiz: { topic: topic || "Whole class", questions } };
+}
+
+const ROADMAP_SHAPE = `{
+  "topic": string,
+  "overview": string,
+  "totalTime": string,
+  "steps": [{ "title": string, "timeframe": string, "goal": string, "tasks": string[], "searchTerms": string[] }],
+  "practice": string[]
+}`;
+
+export async function generateRoadmap(
+  transcript: string,
+  title: string,
+  topic: string,
+): Promise<{ roadmap: Roadmap | null }> {
+  const raw = await chat(
+    [
+      {
+        role: "system",
+        content:
+          "You build practical learning roadmaps for students. Start from what the class transcript covered, then lay out a realistic study schedule that takes the student from that point to confident mastery. 4 to 7 ordered steps, each with a timeframe (e.g. 'Days 1-3' or 'Week 2'), a goal, 2-5 concrete tasks, and 1-3 short search terms the student can look up (topics only, never URLs). Reply with JSON only matching: " +
+          ROADMAP_SHAPE,
+      },
+      {
+        role: "user",
+        content: `Class: ${title}\nTopic to master: ${topic || title}\n\nTranscript:\n${transcript.slice(0, 60000)}`,
+      },
+    ],
+    true,
+  );
+
+  const parsed = parseJson<Partial<Roadmap>>(raw);
+  const steps = Array.isArray(parsed?.steps)
+    ? parsed!.steps
+        .filter((s) => s && typeof s.title === "string")
+        .map((s) => ({
+          title: s.title,
+          timeframe: typeof s.timeframe === "string" ? s.timeframe : "",
+          goal: typeof s.goal === "string" ? s.goal : "",
+          tasks: asStringArray(s.tasks),
+          searchTerms: asStringArray(s.searchTerms),
+        }))
+    : [];
+
+  if (steps.length === 0) return { roadmap: null };
+
+  return {
+    roadmap: {
+      topic: typeof parsed?.topic === "string" && parsed.topic.trim() ? parsed.topic : topic || title,
+      overview: typeof parsed?.overview === "string" ? parsed.overview : "",
+      totalTime: typeof parsed?.totalTime === "string" ? parsed.totalTime : "",
+      steps,
+      practice: asStringArray(parsed?.practice),
+    },
+  };
 }

@@ -17,6 +17,35 @@ export type SuggestedResource = {
   why: string;
 };
 
+export type RoadmapStep = {
+  title: string;
+  timeframe: string;
+  goal: string;
+  tasks: string[];
+  searchTerms: string[];
+};
+
+export type Roadmap = {
+  topic: string;
+  overview: string;
+  totalTime: string;
+  steps: RoadmapStep[];
+  practice: string[];
+};
+
+
+export type QuizQuestion = {
+  question: string;
+  options: string[];
+  answerIndex: number;
+  explanation: string;
+};
+
+export type Quiz = {
+  topic: string;
+  questions: QuizQuestion[];
+};
+
 export type StudyMaterial = {
   summary: string;
   keyPoints: string[];

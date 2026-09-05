@@ -43,7 +43,7 @@ function NewClassPage() {
         Start a new class
       </h1>
       <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
-        Give it a name now so the notes are easy to find later. You can record up to 30 minutes.
+        Give it a name now so the notes are easy to find later. You can record up to 50 minutes.
       </p>
 
       <form

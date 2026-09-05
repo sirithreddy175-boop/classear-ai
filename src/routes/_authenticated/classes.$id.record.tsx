@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/classes/$id/record")({
       { title: "Recording your class — Classear.AI" },
       {
         name: "description",
-        content: "Record up to 30 minutes of class audio, or upload a recording you already have.",
+        content: "Record up to 50 minutes of class audio, or upload a recording you already have.",
       },
       { property: "og:title", content: "Recording your class — Classear.AI" },
       { property: "og:description", content: "Start listening and Classear does the rest." },
@@ -38,8 +38,8 @@ function RecordPage() {
 
   const analyse = useMutation({
     mutationFn: async (input: { blob: Blob; mimeType: string; duration: number }) => {
-      if (input.blob.size > 22_000_000) {
-        throw new Error("That recording is too large. Keep it under about 30 minutes.");
+      if (input.blob.size > 36_000_000) {
+        throw new Error("That recording is too large. Keep it under about 50 minutes.");
       }
       const audioBase64 = await blobToBase64(input.blob);
       return process({
@@ -162,7 +162,7 @@ function RecordPage() {
                 Choose audio file
               </GlassButton>
               <span className="text-[12px] text-muted-foreground">
-                mp3, m4a, webm or ogg — up to about 30 minutes
+                mp3, m4a, webm or ogg — up to about 50 minutes
               </span>
             </div>
           </SectionCard>

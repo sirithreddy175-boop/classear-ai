@@ -14,6 +14,9 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppDemoRouteImport } from './routes/_authenticated/app.demo'
+import { Route as AuthenticatedAppNewClassRouteImport } from './routes/_authenticated/app.new-class'
 import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authenticated/classes.index'
 import { Route as AuthenticatedClassesNewRouteImport } from './routes/_authenticated/classes.new'
 import { Route as AuthenticatedClassesIdIndexRouteImport } from './routes/_authenticated/classes.$id.index'
@@ -43,6 +46,22 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppDemoRoute = AuthenticatedAppDemoRouteImport.update({
+  id: '/app/demo',
+  path: '/app/demo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppNewClassRoute =
+  AuthenticatedAppNewClassRouteImport.update({
+    id: '/app/new-class',
+    path: '/app/new-class',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedClassesIndexRoute =
   AuthenticatedClassesIndexRouteImport.update({
     id: '/classes/',
@@ -72,7 +91,10 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/app/demo': typeof AuthenticatedAppDemoRoute
+  '/app/new-class': typeof AuthenticatedAppNewClassRoute
   '/classes/new': typeof AuthenticatedClassesNewRoute
+  '/app/': typeof AuthenticatedAppIndexRoute
   '/classes/': typeof AuthenticatedClassesIndexRoute
   '/classes/$id/record': typeof AuthenticatedClassesIdRecordRoute
   '/classes/$id/': typeof AuthenticatedClassesIdIndexRoute
@@ -82,7 +104,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/app/demo': typeof AuthenticatedAppDemoRoute
+  '/app/new-class': typeof AuthenticatedAppNewClassRoute
   '/classes/new': typeof AuthenticatedClassesNewRoute
+  '/app': typeof AuthenticatedAppIndexRoute
   '/classes': typeof AuthenticatedClassesIndexRoute
   '/classes/$id/record': typeof AuthenticatedClassesIdRecordRoute
   '/classes/$id': typeof AuthenticatedClassesIdIndexRoute
@@ -94,7 +119,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/app/demo': typeof AuthenticatedAppDemoRoute
+  '/_authenticated/app/new-class': typeof AuthenticatedAppNewClassRoute
   '/_authenticated/classes/new': typeof AuthenticatedClassesNewRoute
+  '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/classes/': typeof AuthenticatedClassesIndexRoute
   '/_authenticated/classes/$id/record': typeof AuthenticatedClassesIdRecordRoute
   '/_authenticated/classes/$id/': typeof AuthenticatedClassesIdIndexRoute
@@ -106,7 +134,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/settings'
+    | '/app/demo'
+    | '/app/new-class'
     | '/classes/new'
+    | '/app/'
     | '/classes/'
     | '/classes/$id/record'
     | '/classes/$id/'
@@ -116,7 +147,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/settings'
+    | '/app/demo'
+    | '/app/new-class'
     | '/classes/new'
+    | '/app'
     | '/classes'
     | '/classes/$id/record'
     | '/classes/$id'
@@ -127,7 +161,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/_authenticated/settings'
+    | '/_authenticated/app/demo'
+    | '/_authenticated/app/new-class'
     | '/_authenticated/classes/new'
+    | '/_authenticated/app/'
     | '/_authenticated/classes/'
     | '/_authenticated/classes/$id/record'
     | '/_authenticated/classes/$id/'
@@ -176,6 +213,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/app/': {
+      id: '/_authenticated/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/demo': {
+      id: '/_authenticated/app/demo'
+      path: '/app/demo'
+      fullPath: '/app/demo'
+      preLoaderRoute: typeof AuthenticatedAppDemoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/app/new-class': {
+      id: '/_authenticated/app/new-class'
+      path: '/app/new-class'
+      fullPath: '/app/new-class'
+      preLoaderRoute: typeof AuthenticatedAppNewClassRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/classes/': {
       id: '/_authenticated/classes/'
       path: '/classes'
@@ -210,7 +268,10 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAppDemoRoute: typeof AuthenticatedAppDemoRoute
+  AuthenticatedAppNewClassRoute: typeof AuthenticatedAppNewClassRoute
   AuthenticatedClassesNewRoute: typeof AuthenticatedClassesNewRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedClassesIndexRoute: typeof AuthenticatedClassesIndexRoute
   AuthenticatedClassesIdRecordRoute: typeof AuthenticatedClassesIdRecordRoute
   AuthenticatedClassesIdIndexRoute: typeof AuthenticatedClassesIdIndexRoute
@@ -219,7 +280,10 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAppDemoRoute: AuthenticatedAppDemoRoute,
+  AuthenticatedAppNewClassRoute: AuthenticatedAppNewClassRoute,
   AuthenticatedClassesNewRoute: AuthenticatedClassesNewRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedClassesIndexRoute: AuthenticatedClassesIndexRoute,
   AuthenticatedClassesIdRecordRoute: AuthenticatedClassesIdRecordRoute,
   AuthenticatedClassesIdIndexRoute: AuthenticatedClassesIdIndexRoute,

@@ -14,12 +14,16 @@ export function AppShell({
   return (
     <div className="grain min-h-svh bg-background">
       <header className="sticky top-0 z-40 border-b border-border-soft bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-5">
-          <Link to="/dashboard" aria-label="Dashboard">
-            <Wordmark />
+        <div className="mx-auto grid h-16 max-w-5xl grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-5 pt-[env(safe-area-inset-top)] sm:flex sm:justify-between sm:gap-4">
+          <Link to="/app" aria-label="Classear.AI app home" className="shrink-0">
+            <Wordmark className="text-[14px] sm:text-[15px]" />
           </Link>
-          <nav className="flex items-center gap-1" aria-label="App">
-            <ShellLink to="/dashboard">Home</ShellLink>
+          <nav
+            className="-mx-1 flex min-w-0 items-center justify-end gap-0.5 overflow-x-auto sm:gap-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            aria-label="App"
+          >
+            <ShellLink to="/app">Home</ShellLink>
+            <ShellLink to="/dashboard">Recent</ShellLink>
             <ShellLink to="/classes">Classes</ShellLink>
             <ShellLink to="/settings">Settings</ShellLink>
           </nav>
@@ -37,11 +41,11 @@ export function AppShell({
   );
 }
 
-function ShellLink({ to, children }: { to: "/dashboard" | "/classes" | "/settings"; children: ReactNode }) {
+function ShellLink({ to, children }: { to: "/app" | "/dashboard" | "/classes" | "/settings"; children: ReactNode }) {
   return (
     <Link
       to={to}
-      className="rounded-md px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+      className="shrink-0 whitespace-nowrap rounded-md px-2.5 py-2.5 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground sm:px-3 sm:text-[13px]"
       activeProps={{ className: "text-foreground" }}
     >
       {children}
