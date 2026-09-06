@@ -24,6 +24,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 type Mode = "login" | "signup" | "reset";
+type ResetStep = "email" | "code" | "password";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -32,6 +33,9 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [step, setStep] = useState<ResetStep>("email");
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -62,13 +66,28 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate({ to: "/dashboard" });
-      } else {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth`,
+      } else if (step === "email") {
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: false },
         });
         if (error) throw error;
-        toast.success("Password reset link sent.");
-        setMode("login");
+        toast.success("We sent a 6-digit code to your email.");
+        setStep("code");
+      } else if (step === "code") {
+        const { error } = await supabase.auth.verifyOtp({
+          email,
+          token: code.trim(),
+          type: "email",
+        });
+        if (error) throw error;
+        toast.success("Code verified. Set a new password.");
+        setStep("password");
+      } else {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+        toast.success("Password updated. You're signed in.");
+        navigate({ to: "/dashboard" });
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Something went wrong. Try again.");
@@ -84,11 +103,23 @@ function AuthPage() {
       </Link>
       <div className="surface w-full max-w-sm rounded-xl p-7">
         <h1 className="text-xl font-semibold text-foreground">
-          {mode === "login" ? "Welcome back" : mode === "signup" ? "Create your account" : "Reset password"}
+          {mode === "login"
+            ? "Welcome back"
+            : mode === "signup"
+              ? "Create your account"
+              : step === "email"
+                ? "Forgot your password?"
+                : step === "code"
+                  ? "Enter your code"
+                  : "Set a new password"}
         </h1>
         <p className="mt-2 text-[13px] text-muted-foreground">
           {mode === "reset"
-            ? "We'll email you a link to set a new password."
+            ? step === "email"
+              ? "We'll email you a 6-digit code — no links to click."
+              : step === "code"
+                ? `Type the 6-digit code we sent to ${email}.`
+                : "Choose a new password for your account."
             : "Your classes stay private to your account."}
         </p>
 
@@ -105,6 +136,7 @@ function AuthPage() {
               />
             </div>
           )}
+          {!(mode === "reset" && step !== "email") && (
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -117,6 +149,37 @@ function AuthPage() {
               placeholder="you@school.edu"
             />
           </div>
+          )}
+          {mode === "reset" && step === "code" && (
+            <div className="space-y-2">
+              <Label htmlFor="code">6-digit code</Label>
+              <Input
+                id="code"
+                required
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={8}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="123456"
+              />
+            </div>
+          )}
+          {mode === "reset" && step === "password" && (
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                required
+                minLength={6}
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 6 characters"
+              />
+            </div>
+          )}
           {mode !== "reset" && (
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -139,13 +202,34 @@ function AuthPage() {
                 ? "Sign in"
                 : mode === "signup"
                   ? "Create account"
-                  : "Send reset link"}
+                  : step === "email"
+                    ? "Send code"
+                    : step === "code"
+                      ? "Verify code"
+                      : "Save new password"}
           </GlassButton>
         </form>
 
         <div className="mt-6 flex flex-col gap-2 text-[13px] text-muted-foreground">
+          {mode === "reset" && step === "code" ? (
+            <button
+              type="button"
+              className="text-left hover:text-foreground"
+              onClick={() => setStep("email")}
+            >
+              Didn't get it? Send another code
+            </button>
+          ) : null}
           {mode !== "login" ? (
-            <button type="button" className="text-left hover:text-foreground" onClick={() => setMode("login")}>
+            <button
+              type="button"
+              className="text-left hover:text-foreground"
+              onClick={() => {
+                setMode("login");
+                setStep("email");
+                setCode("");
+              }}
+            >
               Already have an account? Sign in
             </button>
           ) : (
@@ -153,8 +237,15 @@ function AuthPage() {
               <button type="button" className="text-left hover:text-foreground" onClick={() => setMode("signup")}>
                 New here? Create an account
               </button>
-              <button type="button" className="text-left hover:text-foreground" onClick={() => setMode("reset")}>
-                Forgot your password?
+              <button
+                type="button"
+                className="text-left hover:text-foreground"
+                onClick={() => {
+                  setMode("reset");
+                  setStep("email");
+                }}
+              >
+                Forgot your password? Get a code by email
               </button>
             </>
           )}

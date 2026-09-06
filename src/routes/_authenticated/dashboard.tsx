@@ -6,6 +6,7 @@ import { AppShell, SectionCard } from "@/components/app/AppShell";
 import { ClassRow } from "@/components/app/ClassRow";
 import { GlassButton } from "@/components/ui/glass-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getFirstName } from "@/lib/greeting";
 import { ensureDemoClass, listClasses } from "@/lib/classes-data";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const name = useQuery({ queryKey: ["first-name"], queryFn: getFirstName });
   const classes = useQuery({ queryKey: ["classes"], queryFn: listClasses });
 
   const demo = useMutation({
@@ -41,7 +43,10 @@ function Dashboard() {
 
   return (
     <AppShell>
-      <h1 className="text-[clamp(1.8rem,5vw,2.6rem)] font-semibold text-foreground">
+      <p className="text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
+        Hi {name.data ?? "there"} — what's up?
+      </p>
+      <h1 className="mt-3 text-[clamp(1.8rem,5vw,2.6rem)] font-semibold text-foreground">
         Ready for your next class?
       </h1>
       <p className="mt-3 max-w-lg text-[14px] leading-relaxed text-muted-foreground">

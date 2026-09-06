@@ -1,10 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app/AppShell";
 import { GlassButton } from "@/components/ui/glass-button";
+import { getFirstName } from "@/lib/greeting";
 import { ensureDemoClass } from "@/lib/classes-data";
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -66,6 +67,7 @@ function SparkIcon() {
 function AppEntry() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const name = useQuery({ queryKey: ["first-name"], queryFn: getFirstName });
 
   const demo = useMutation({
     mutationFn: ensureDemoClass,
@@ -78,7 +80,10 @@ function AppEntry() {
 
   return (
     <AppShell>
-      <h1 className="reveal-1 text-[clamp(1.9rem,7vw,2.9rem)] font-semibold tracking-[-0.035em] text-foreground">
+      <p className="reveal-1 text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
+        Hi {name.data ?? "there"} — what's up?
+      </p>
+      <h1 className="reveal-1 mt-3 text-[clamp(1.9rem,7vw,2.9rem)] font-semibold tracking-[-0.035em] text-foreground">
         Ready for your next class?
       </h1>
       <p className="reveal-1 mt-3 text-[14px] leading-[1.6] text-muted-foreground" style={{ animationDelay: "120ms" }}>

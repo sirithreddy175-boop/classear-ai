@@ -172,6 +172,7 @@ export function useRecorder() {
       setSeconds(0);
       startTimer();
       void requestWakeLock();
+      startKeepAlive();
       setState("recording");
     } catch (err) {
       cleanup();
@@ -187,7 +188,7 @@ export function useRecorder() {
         setError("Recording could not start. Check your microphone and try again.");
       }
     }
-  }, [cleanup, startTimer]);
+  }, [cleanup, startTimer, startKeepAlive, requestWakeLock]);
 
   const pause = useCallback(() => {
     const recorder = recorderRef.current;
@@ -198,8 +199,9 @@ export function useRecorder() {
     accumulatedRef.current = secondsRef.current;
     segmentStartRef.current = null;
     releaseWakeLock();
+    stopKeepAlive();
     setState("paused");
-  }, [releaseWakeLock]);
+  }, [releaseWakeLock, stopKeepAlive]);
 
   const resume = useCallback(() => {
     const recorder = recorderRef.current;
@@ -207,8 +209,9 @@ export function useRecorder() {
     recorder.resume();
     startTimer();
     void requestWakeLock();
+    startKeepAlive();
     setState("recording");
-  }, [startTimer, requestWakeLock]);
+  }, [startTimer, requestWakeLock, startKeepAlive]);
 
   const stop = useCallback(async (): Promise<RecorderResult | null> => {
     const recorder = recorderRef.current;
